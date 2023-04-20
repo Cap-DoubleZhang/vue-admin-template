@@ -1,4 +1,5 @@
-import { asyncRoutes, constantRoutes } from '@/router'
+import { constantRoutes, componentMap } from '@/router'
+import { getCurrentUserRoleMenus } from '@/api/system/roleMenu'
 
 /**
  * Use meta.role to determine if the current user has permission
@@ -46,18 +47,34 @@ const mutations = {
   }
 }
 
+// 替换route对象中的component
+function replaceComponent(comp) {
+  if (comp.component && typeof (comp.component) === 'string') {
+    comp.component = componentMap[comp.component]
+  }
+  if (comp.children && comp.children.length > 0) {
+    for (let i = 0; i < comp.children.length; i++) {
+      comp.children[i] = replaceComponent(comp.children[i])
+    }
+  } else {
+    delete comp.children
+  }
+  return comp
+}
+
 const actions = {
-  generateRoutes({ commit }, roles) {
-    return new Promise(resolve => {
-      let accessedRoutes
-      if (roles.includes('admin')) {
-        accessedRoutes = asyncRoutes || []
-      } else {
-        accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
+  generateRoutes: async function ({ commit }) {
+    // 1、根据当前登录用户获取所拥有的所有菜单权限
+    const { data } = await getCurrentUserRoleMenus()
+    // 2、整理（替换组件名称，移除children为null的数据）
+    const myRoutes = data.filter(curr => {
+      if (curr.children == null || curr.children.length === 0) {
+        delete curr.children
       }
-      commit('SET_ROUTES', accessedRoutes)
-      resolve(accessedRoutes)
+      return replaceComponent(curr)
     })
+    commit('SET_ROUTES', myRoutes)
+    return myRoutes
   }
 }
 

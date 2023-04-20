@@ -38,8 +38,8 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
         const { data } = response
-        commit('SET_TOKEN', data.token)
-        setToken(data.token)
+        commit('SET_TOKEN', data)
+        setToken(data)
         resolve()
       }).catch(error => {
         reject(error)
@@ -56,12 +56,9 @@ const actions = {
         if (!data) {
           reject('Verification failed, please Login again.')
         }
-
         const { roles, name, avatar } = data
-
-        // roles must be a non-empty array
-        if (!roles || roles.length <= 0) {
-          reject('getInfo: roles must be a non-null array!')
+        if (roles.length <= 0) {
+          reject('当前用户无角色，请联系管理员。')
         }
 
         commit('SET_ROLES', roles)
