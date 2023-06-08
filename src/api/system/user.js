@@ -20,7 +20,7 @@ export function getInfo() {
 // 获取当前登录信息
 export function getUserInfo() {
     return request({
-        url: 'user/userinfo',
+        url: 'auth/info',
         method: 'get'
     })
 }
@@ -36,16 +36,25 @@ export function logout() {
 // 获取用户列表
 export function getUsers(query) {
     return request({
-        url: 'user/paged-list',
+        url: 'user/pagelist',
         method: 'get',
         params: query
     })
 }
 
-// 新增/编辑用户信息
+// 编辑用户信息
+export function updateUser(data) {
+    return request({
+        url: 'user/update',
+        method: 'put',
+        data
+    })
+}
+
+// 新增用户信息
 export function saveUser(data) {
     return request({
-        url: 'user',
+        url: 'user/update',
         method: 'put',
         data
     })
@@ -54,7 +63,7 @@ export function saveUser(data) {
 // 删除用户
 export function deleteUser(data) {
     return request({
-        url: 'user/by-id',
+        url: 'user/delete',
         method: 'delete',
         data
     })

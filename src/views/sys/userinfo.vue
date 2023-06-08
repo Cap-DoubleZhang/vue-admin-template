@@ -19,29 +19,11 @@
                       <el-input v-model="user.userLoginName" disabled />
                     </el-form-item>
                     <el-form-item label="昵称" prop="userShowName">
-                      <el-input
-                        v-model="user.userShowName"
-                        placeholder="请输入昵称"
-                      />
-                    </el-form-item>
-                    <el-form-item label="手机号码">
-                      <el-input
-                        v-model="user.phone"
-                        placeholder="请输入手机号码"
-                      />
-                    </el-form-item>
-                    <el-form-item label="邮箱">
-                      <el-input v-model="user.eMail" placeholder="请输入邮箱" />
-                    </el-form-item>
-                    <el-form-item label="身份证号">
-                      <el-input
-                        v-model="user.idCard"
-                        placeholder="请输入身份证号"
-                      />
+                      <el-input v-model="user.userShowName" placeholder="请输入昵称" />
                     </el-form-item>
                     <el-form-item label="描述">
                       <el-input
-                        v-model="user.introduction"
+                        v-model="user.descripts"
                         type="textarea"
                         placeholder="请输入描述"
                         :autosize="{ minRows: 3, maxRows: 4 }"
@@ -50,9 +32,7 @@
                       />
                     </el-form-item>
                     <el-form-item>
-                      <el-button type="primary" @click="updateBaseInfo()">
-                        确认保存
-                      </el-button>
+                      <el-button type="primary" @click="updateBaseInfo()"> 确认保存 </el-button>
                     </el-form-item>
                   </el-form>
                 </div>
@@ -91,48 +71,7 @@
                       />
                     </el-form-item>
                     <el-form-item>
-                      <el-button type="primary" @click="updatePassword()">
-                        确认保存
-                      </el-button>
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-            </el-tab-pane>
-            <el-tab-pane label="更改头像" name="updateHeadPortrait">
-              <div class="user-activity">
-                <div class="box-center" style="width: 100%">
-                  <el-form
-                    ref="dataFormUpdateHeadPortrait"
-                    :rules="rulesUpdateHeadPortrait"
-                    :model="headPortrait"
-                    label-position="right"
-                    label-width="90px"
-                    style="width: 85%; margin-left: 50px"
-                  >
-                    <el-form-item>
-                      <el-upload
-                        class="avatar-uploader"
-                        action="https://localhost:5001/api/file/file?filePathName=userHeadPortrait"
-                        :show-file-list="false"
-                        :on-success="uploadSuccess"
-                        :on-error="uploadError"
-                        :before-upload="beforeAvatarUpload"
-                      >
-                        <img v-if="headPortrait.headPortrait" :src="headPortrait.headPortrait" class="avatar">
-                        <i v-else class="el-icon-plus avatar-uploader-icon" />
-                      </el-upload>
-                    </el-form-item>
-                    <el-form-item label="头像路径" prop="headPortrait">
-                      <el-input
-                        v-model="headPortrait.headPortrait"
-                        placeholder="非本地图片，请在此输入网络路径"
-                      />
-                    </el-form-item>
-                    <el-form-item>
-                      <el-button type="primary" @click="uploadHeadPortrait()">
-                        确认更改
-                      </el-button>
+                      <el-button type="primary" @click="updatePassword()"> 确认保存 </el-button>
                     </el-form-item>
                   </el-form>
                 </div>
@@ -145,12 +84,7 @@
   </div>
 </template>
 <script>
-import {
-  getUserInfo,
-  updateUserPassword,
-  saveUser,
-  updateUserHeadPortrait
-} from '@/api/system/user'
+import { getUserInfo, updateUserPassword, saveUser } from '@/api/system/user'
 
 export default {
   data() {
@@ -158,8 +92,7 @@ export default {
       user: {
         userLoginName: '',
         userShowName: '',
-        headPortrait: '',
-        introduction: ''
+        descripts: ''
       },
       password: {
         oldPassword: '',
@@ -167,16 +100,9 @@ export default {
         reNewPaswword: ''
       },
       activeTab: 'baseInfo',
-      headPortrait: {
-        headPortrait: ''
-      },
       rulesBaseInfo: {
-        userLoginName: [
-          { required: true, message: '用户名不可为空.', trigger: 'blur' }
-        ],
-        userShowName: [
-          { required: true, message: '昵称不可为空.', trigger: 'blur' }
-        ]
+        userLoginName: [{ required: true, message: '用户名不可为空.', trigger: 'blur' }],
+        userShowName: [{ required: true, message: '昵称不可为空.', trigger: 'blur' }]
       },
       rulesPassword: {
         oldPassword: [
@@ -191,11 +117,6 @@ export default {
           { required: true, message: '确认新密码不可为空.', trigger: 'blur' },
           { min: 6, message: '确认新密码不可小于6位字符.', trigger: 'blur' }
         ]
-      },
-      rulesUpdateHeadPortrait: {
-        headPortrait: [
-          { required: true, message: '头像地址不可为空.', trigger: 'blur' }
-        ]
       }
     }
   },
@@ -204,13 +125,12 @@ export default {
   },
   methods: {
     getUser() {
-      getUserInfo().then((response) => {
+      getUserInfo().then(response => {
         this.user = response.data
-        this.headPortrait.headPortrait = this.user.headPortrait
       })
     },
     updateBaseInfo() {
-      this.$refs['dataFormBaseInfo'].validate((valid) => {
+      this.$refs['dataFormBaseInfo'].validate(valid => {
         if (valid) {
           const tempData = Object.assign({}, this.user)
           saveUser(tempData).then(() => {
@@ -226,7 +146,7 @@ export default {
     },
     // 更改密码方法
     updatePassword() {
-      this.$refs['dataFormPassword'].validate((valid) => {
+      this.$refs['dataFormPassword'].validate(valid => {
         if (valid) {
           updateUserPassword(this.password).then(() => {
             this.$message({
@@ -239,38 +159,6 @@ export default {
               newPassword: '',
               reNewPaswword: ''
             }
-          })
-        }
-      })
-    },
-    // 上传图片成功后
-    uploadSuccess(respone) {
-      this.headPortrait.headPortrait = respone.data
-      this.$message({
-        message: '保存成功.',
-        type: 'success',
-        duration: 2000
-      })
-    },
-    uploadError(respone) {
-      this.$message({
-        message: respone.errors,
-        type: 'error',
-        duration: 2000
-      })
-    },
-    uploadHeadPortrait() {
-      this.$refs['dataFormUpdateHeadPortrait'].validate((valid) => {
-        if (valid) {
-          this.$confirm('你确定保存吗?', '提示', {}).then(() => {
-            updateUserHeadPortrait(this.headPortrait).then(() => {
-              this.getUser()
-              this.$notify({
-                message: '更改成功.',
-                type: 'success',
-                duration: 2000
-              })
-            })
           })
         }
       })

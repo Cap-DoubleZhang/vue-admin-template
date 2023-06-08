@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getRoleMenus(query) {
   return request({
-    url: `rolemenus/paged-list`,
+    url: `role-menu/roleMenus`,
     method: 'get',
     params: query
   })
@@ -10,7 +10,7 @@ export function getRoleMenus(query) {
 
 export function saveRoleMenus(data) {
   return request({
-    url: `rolemenus/rolemenu`,
+    url: `role-menu/rolemenu`,
     method: 'post',
     data
   })

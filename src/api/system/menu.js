@@ -12,7 +12,7 @@ export function getMenus(query) {
 // 获取所有的菜单列表
 export function getAllMenus(query) {
     return request({
-        url: 'menu/allMenus',
+        url: 'menu/treelist',
         method: 'get',
         params: query
     })

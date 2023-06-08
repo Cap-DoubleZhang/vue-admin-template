@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getUserRoles(query) {
   return request({
-    url: `user-role/user-role`,
+    url: `user-role/userRole`,
     method: 'get',
     params: query
   })
@@ -10,7 +10,7 @@ export function getUserRoles(query) {
 
 export function saveUserRoles(data) {
   return request({
-    url: `user-role/save`,
+    url: `user-role/userRole`,
     method: 'post',
     data
   })

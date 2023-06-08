@@ -1,89 +1,158 @@
 <template>
   <div class="app-container">
-    <el-row type="flex" justify="end" class="filter-container">
-      <el-input v-model="listQuery.keyWord" prefix-icon="el-icon-search" placeholder="关键词，多个关键词请使用空格分隔" style="width: 300px;" class="filter-item" />
-      <el-button-group style="margin-left:10px;">
-        <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
+    <el-row type="flex" class="filter-container">
+      <el-input
+        v-model="listQuery.keyWord"
+        prefix-icon="el-icon-search"
+        placeholder="关键词，多个关键词请使用空格分隔"
+        style="width: 300px"
+        size="mini"
+        class="filter-item"
+      />
+      <el-button-group style="margin-left: 10px">
+        <el-button
+          class="filter-item"
+          type="primary"
+          size="mini"
+          icon="el-icon-search"
+          @click="handleFilter"
+        >
           查询
-        </el-button>
-        <el-button class="filter-item" type="primary" icon="el-icon-edit" @click="handleCreate">
-          新增
         </el-button>
       </el-button-group>
     </el-row>
 
-    <el-table
-      :key="tableKey"
-      :data="list"
-      border
-      fit
-      style="width: 100%;"
-    >
+    <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button
+          type="primary"
+          plain
+          icon="el-icon-plus"
+          size="mini"
+          @click="handleCreate"
+        >新增</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="danger"
+          plain
+          icon="el-icon-delete"
+          size="mini"
+          :disabled="multiple"
+          @click="handleDelete"
+        >删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="info"
+          plain
+          icon="el-icon-upload2"
+          size="mini"
+          @click="handleImport"
+        >导入</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="el-icon-download"
+          size="mini"
+          @click="handleExport"
+        >导出</el-button>
+      </el-col>
+      <right-toolbar :show-search.sync="showSearch" :columns="columns" @queryTable="getList" />
+    </el-row>
+
+    <el-table :key="tableKey" :data="list" border fit style="width: 100%">
       <el-table-column type="selection" width="55" align="center" />
       <!-- <el-table-column label="序号" prop="id" sortable="custom" align="center" width="138">
         <template slot-scope="{row}">
           <span>{{ row.id }}</span>
         </template>
       </el-table-column> -->
+      <el-table-column label="操作" align="left" width="240" class-name="small-padding fixed-width">
+        <template slot-scope="{ row }">
+          <el-button type="primary" size="mini" @click="handleUpdate(row)"> 编辑 </el-button>
+          <el-button
+            v-if="row.status != 'deleted'"
+            size="mini"
+            type="danger"
+            @click="handleDelete(row)"
+          >
+            删除
+          </el-button>
+          <el-button
+            v-if="row.adminFlag != 1"
+            type="primary"
+            size="mini"
+            @click="Authorization(row)"
+          >
+            分配权限
+          </el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="角色名" min-width="120px">
-        <template slot-scope="{row}">
+        <template slot-scope="{ row }">
           <span>{{ row.roleName }}</span>
         </template>
       </el-table-column>
       <el-table-column label="是否为管理员" width="110" align="center">
-        <template slot-scope="{row}">
+        <template slot-scope="{ row }">
           <el-switch
             slot="reference"
             v-model="row.adminFlag"
             :active-value="1"
             :inactive-value="0"
             active-color="#13ce66"
-            @change="updateRoleAdmin($event,row)"
+            @change="updateRoleAdmin($event, row)"
           />
         </template>
       </el-table-column>
       <el-table-column label="禁用状态" width="100" align="center">
-        <template slot-scope="{row}">
+        <template slot-scope="{ row }">
           <el-switch
             slot="reference"
             v-model="row.isUse"
             :active-value="1"
             :inactive-value="0"
             active-color="#13ce66"
-            @change="updateRoleUse($event,row)"
+            @change="updateRoleUse($event, row)"
           />
         </template>
       </el-table-column>
       <el-table-column label="描述" min-width="120">
-        <template slot-scope="{row}">
+        <template slot-scope="{ row }">
           <span>{{ row.roleDesc }}</span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间" width="160" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.createdTime }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="操作" align="left" width="240" class-name="small-padding fixed-width">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">
-            编辑
-          </el-button>
-          <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleDelete(row)">
-            删除
-          </el-button>
-          <el-button v-if="row.adminFlag != 1" type="primary" size="mini" @click="Authorization(row)">
-            分配权限
-          </el-button>
+        <template slot-scope="{ row }">
+          <span>{{ row.createTime }}</span>
         </template>
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.pageIndex" :limit.sync="listQuery.pageSize" @pagination="getList" />
+    <pagination
+      v-show="total > 0"
+      :total="total"
+      :page.sync="listQuery.pageIndex"
+      :limit.sync="listQuery.pageSize"
+      @pagination="getList"
+    />
 
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" style="margin-top:-100px;">
-      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="right" label-width="70px" style="width: 85%; margin-left:50px;">
+    <el-dialog
+      :title="textMap[dialogStatus]"
+      :visible.sync="dialogFormVisible"
+      style="margin-top: -100px"
+    >
+      <el-form
+        ref="dataForm"
+        :rules="rules"
+        :model="temp"
+        label-position="right"
+        label-width="70px"
+        style="width: 85%; margin-left: 50px"
+      >
         <el-form-item label="角色名" prop="roleName">
           <el-input v-model="temp.roleName" placeholder="请输入角色名" />
         </el-form-item>
@@ -96,37 +165,63 @@
           />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="temp.roleDesc" :autosize="{ minRows: 2, maxRows: 4}" type="textarea" maxlength="200" show-word-limit placeholder="描述" />
+          <el-input
+            v-model="temp.roleDesc"
+            :autosize="{ minRows: 2, maxRows: 4 }"
+            type="textarea"
+            maxlength="200"
+            show-word-limit
+            placeholder="描述"
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">
-          关闭
-        </el-button>
-        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
+        <el-button @click="dialogFormVisible = false"> 关闭 </el-button>
+        <el-button type="primary" @click="dialogStatus === 'create' ? createData() : updateData()">
           确认
         </el-button>
       </div>
     </el-dialog>
 
-    <el-dialog :title="dialogRoleMenuTitle" :visible.sync="dialogRoleMenuVisible" style="margin-top:-100px;">
-      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="right" label-width="70px" style="width: 85%; margin-left:50px;">
-        <el-tree ref="roleMenuTree" node-key="id" :data="roleMenuDto.roleMenuList" default-expand-all show-checkbox :props="roleMenuProps" />
+    <el-dialog
+      :title="dialogRoleMenuTitle"
+      :visible.sync="dialogRoleMenuVisible"
+      style="margin-top: -100px"
+    >
+      <el-form
+        ref="dataForm"
+        :rules="rules"
+        :model="temp"
+        label-position="right"
+        label-width="70px"
+        style="width: 85%; margin-left: 50px"
+      >
+        <el-tree
+          ref="roleMenuTree"
+          node-key="id"
+          :data="roleMenuDto.roleMenuList"
+          :render-content="treeTenderContent"
+          default-expand-all
+          show-checkbox
+          icon-class="el-icon-menu"
+          :props="roleMenuProps"
+        />
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogRoleMenuVisible = false">
-          关闭
-        </el-button>
-        <el-button type="primary" @click="saveRoleMenu">
-          确认
-        </el-button>
+        <el-button @click="dialogRoleMenuVisible = false"> 关闭 </el-button>
+        <el-button type="primary" @click="saveRoleMenu"> 确认 </el-button>
       </div>
     </el-dialog>
-
   </div>
 </template>
 <script>
-import { getRoles, saveRole, deleteRole, updateRoleIsUse, updateRoleAdminFlag } from '@/api/system/role'
+import {
+  getRoles,
+  saveRole,
+  deleteRole,
+  updateRoleIsUse,
+  updateRoleAdminFlag
+} from '@/api/system/role'
 import { getRoleMenus, saveRoleMenus } from '@/api/system/roleMenu'
 // import waves from '@/directive/waves' // waves directive
 // import Pagination from '@/components/Pagination' // secondary package based on el-pagination
@@ -177,7 +272,7 @@ export default {
         roleId: 0
       },
       roleMenus: {
-        Id: 0,
+        roleId: 0,
         menuIds: []
       },
       roleMenuDto: {
@@ -188,6 +283,9 @@ export default {
   },
   created() {
     this.getList()
+  },
+  mounted() {
+    this.changeTreeClass()
   },
   methods: {
     getList() {
@@ -223,7 +321,7 @@ export default {
       })
     },
     createData() {
-      this.$refs['dataForm'].validate((valid) => {
+      this.$refs['dataForm'].validate(valid => {
         if (valid) {
           saveRole(this.temp).then(() => {
             this.getList()
@@ -246,7 +344,7 @@ export default {
       })
     },
     updateData() {
-      this.$refs['dataForm'].validate((valid) => {
+      this.$refs['dataForm'].validate(valid => {
         if (valid) {
           const tempData = Object.assign({}, this.temp)
           saveRole(tempData).then(() => {
@@ -334,8 +432,8 @@ export default {
     },
     Authorization(row) {
       this.query.roleId = row.id
-      this.roleMenus.Id = row.id
-      this.getRoleMenus()
+      this.roleMenus.roleId = row.id
+      this.getRoleMenus() // 获取所有的菜单及当前角色拥有的菜单
       this.dialogRoleMenuVisible = true
       this.dialogRoleMenuTitle = `<${row.roleName}>角色授权`
     },
@@ -355,7 +453,9 @@ export default {
       })
     },
     saveRoleMenu() {
-      const menuIds = this.$refs.roleMenuTree.getCheckedKeys().concat(this.$refs.roleMenuTree.getHalfCheckedKeys())
+      const menuIds = this.$refs.roleMenuTree
+        .getCheckedKeys()
+        .concat(this.$refs.roleMenuTree.getHalfCheckedKeys())
       // const menuIds = this.$refs.roleMenuTree.getCheckedKeys()
       if (menuIds.length <= 0) {
         this.$message({
@@ -372,7 +472,35 @@ export default {
         })
         this.dialogRoleMenuVisible = false
       })
+    },
+    treeTenderContent(h, { node, data }) {
+      let className = ''
+      // 判断是否为最后一级菜单
+      if (data.children == null || data.children.length <= 0) {
+        className = 'especoally'
+      }
+      return <div class={className}>{data.menuName}</div>
+    },
+    changeTreeClass() {
+      const classDomList = document.getElementsByClassName('especoally')
+      for (let i = 0; i < classDomList.length; i++) {
+        // classDomList[i].parentNode.style.cssText = 'float:left'
+        // classDomList[i].parentNode.className = 'el-tree-node__content option-wrapper'
+        // classDomList[i].parentNode.parentNode.parentNode.style.marginLeft = '70px'
+        classDomList[i].parentNode.style.cssFloat = 'left'
+        classDomList[i].parentNode.style.styleFloat = 'left'
+      }
     }
   }
 }
 </script>
+<style scoped>
+.filter-container,
+.el-row {
+  padding-bottom: 20px;
+}
+
+.option-wrapper {
+  padding: 0 !important;
+}
+</style>

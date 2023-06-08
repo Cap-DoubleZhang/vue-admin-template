@@ -39,6 +39,25 @@ export const constantRoutes = [
       name: '首页',
       component: () => import('@/views/dashboard/index'),
       meta: { title: '首页', icon: 'dashboard', affix: true }
+    }, {
+      path: 'userinfo',
+      component: () =>
+        import('@/views/sys/userinfo'),
+      name: '用户信息',
+      hidden: true,
+      meta: { title: '用户信息', icon: 'el-icon-location-outline' }
+    }]
+  },
+
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/job',
+    children: [{
+      path: '/sys/job',
+      name: '任务调度',
+      component: () => import('@/views/sys/job'),
+      meta: { title: '任务调度', icon: 'el-icon-alarm-clock' }
     }]
   }
 ]

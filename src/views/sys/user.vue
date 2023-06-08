@@ -63,14 +63,7 @@
       <right-toolbar :show-search.sync="showSearch" :columns="columns" @queryTable="getList" />
     </el-row>
 
-    <el-table
-      :key="tableKey"
-      :data="list"
-      border
-      fit
-      highlight-current-row
-      style="width: 100%"
-    >
+    <el-table :key="tableKey" :data="list" border fit highlight-current-row style="width: 100%">
       <el-table-column type="selection" width="55" align="center" />
       <!-- <el-table-column
         label="序号"
@@ -83,6 +76,37 @@
           <span>{{ row.id }}</span>
         </template>
       </el-table-column> -->
+      <el-table-column
+        label="操作"
+        align="center"
+        width="250"
+        class-name="small-padding fixed-width"
+      >
+        <template slot-scope="{ row }">
+          <el-button type="primary" size="mini" @click="handleUpdate(row)"> 编辑 </el-button>
+          <el-button
+            v-if="row.status != 'deleted'"
+            size="mini"
+            type="danger"
+            @click="handleDelete(row)"
+          >
+            删除
+          </el-button>
+          <el-dropdown class="el-button--mini" @command="handleMore">
+            <el-button type="primary" size="mini">
+              更多<i class="el-icon-arrow-down el-icon--right" />
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{ type: 'assignRoles', params: row }"
+              >分配角色</el-dropdown-item>
+              <el-dropdown-item
+                :command="{ type: 'handleResetPassword', params: row }"
+              >重置密码</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </template>
+      </el-table-column>
       <el-table-column label="用户名" min-width="120px">
         <template slot-scope="{ row }">
           <span>{{ row.userLoginName }}</span>
@@ -93,11 +117,6 @@
           <span>{{ row.userShowName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="手机号码" width="110" align="center">
-        <template slot-scope="{ row }">
-          <span>{{ row.phone }}</span>
-        </template>
-      </el-table-column>
       <el-table-column label="是否在线" width="80px" align="center">
         <template slot-scope="{ row }">
           <el-button
@@ -105,25 +124,10 @@
             :style="{
               background: row.isOnline ? 'green' : 'gray',
               padding: '4px',
-              'vertical-align': 'middle',
+              'vertical-align': 'middle'
             }"
           />
-          &nbsp;&nbsp;<span>{{ row.isOnline ? "在线" : "离线" }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="上次登录时间" width="160px" align="center">
-        <template slot-scope="{ row }">
-          <span>{{ row.lastLoginTime }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="上次登录IP" width="130px" align="center">
-        <template slot-scope="{ row }">
-          <span>{{ row.lastLoginIP }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="登陆次数" width="80px" align="center">
-        <template slot-scope="{ row }">
-          <span>{{ row.loginTimes }}</span>
+          &nbsp;&nbsp;<span>{{ row.isOnline ? '在线' : '离线' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="禁用状态" width="100" align="center">
@@ -138,39 +142,24 @@
           />
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="160px" align="center">
+      <el-table-column label="最近登录时间" width="160px" align="center">
         <template slot-scope="{ row }">
-          <span>{{ row.createdTime }}</span>
+          <span>{{ row.lastLoginTime }}</span>
         </template>
       </el-table-column>
-
-      <el-table-column
-        label="操作"
-        align="center"
-        width="250"
-        class-name="small-padding fixed-width"
-      >
+      <el-table-column label="最近登录IP" width="130px" align="center">
         <template slot-scope="{ row }">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">
-            编辑
-          </el-button>
-          <el-button
-            v-if="row.status != 'deleted'"
-            size="mini"
-            type="danger"
-            @click="handleDelete(row)"
-          >
-            删除
-          </el-button>
-          <el-dropdown class="el-button--mini" @command="handleMore">
-            <el-button type="primary" size="mini">
-              更多<i class="el-icon-arrow-down el-icon--right" />
-            </el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item :command="{type:'assignRoles',params:row}">分配角色</el-dropdown-item>
-              <el-dropdown-item :command="{type:'handleResetPassword',params:row}">重置密码</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+          <span>{{ row.lastLoginIP }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="登录次数" width="80px" align="center">
+        <template slot-scope="{ row }">
+          <span>{{ row.loginTimes }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="创建时间" width="160px" align="center">
+        <template slot-scope="{ row }">
+          <span>{{ row.createTime }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -184,71 +173,30 @@
     />
 
     <el-dialog
-      :title="textMap[dialogStatus]"
-      :visible.sync="dialogFormVisible"
+      title="创建用户"
+      :visible.sync="dialogCreateUserFormVisible"
       style="margin-top: -100px"
     >
       <el-form
         ref="dataForm"
-        :rules="rules"
-        :model="temp"
+        :rules="createUserRules"
+        :model="createUserModel"
         label-position="right"
         label-width="70px"
         style="width: 85%; margin-left: 50px"
       >
         <el-form-item label="用户名" prop="userLoginName" class="filter-item">
-          <el-input
-            v-model="temp.userLoginName"
-            placeholder="请输入用户名"
-            :disabled="dialogStatus === 'create' ? false : true"
-          />
+          <el-input v-model="createUserModel.userLoginName" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="昵称" prop="userShowName">
-          <el-input v-model="temp.userShowName" placeholder="请输入昵称" />
+          <el-input v-model="createUserModel.userShowName" placeholder="请输入昵称" />
         </el-form-item>
-        <el-form-item label="头像">
-          <el-upload
-            class="avatar-uploader"
-            action="https://localhost:5001/api/file/file?filePathName=userHeadPortrait"
-            :show-file-list="false"
-            :on-success="uploadSuccess"
-            :on-error="uploadError"
-            :before-upload="beforeAvatarUpload"
-          >
-            <img
-              v-if="temp.headPortrait"
-              :src="temp.headPortrait"
-              class="avatar"
-            >
-            <i v-else class="el-icon-plus avatar-uploader-icon" />
-          </el-upload>
-        </el-form-item>
-        <el-form-item label="手机号码">
-          <el-input v-model="temp.phone" placeholder="请输入手机号码" />
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="temp.eMail" placeholder="请输入邮箱" />
-        </el-form-item>
-        <el-form-item label="出生日期">
-          <el-date-picker
-            v-model="temp.birthDate"
-            type="date"
-            placeholder="请选择出生日期"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="身份证号">
-          <el-input v-model="temp.idCard" placeholder="请输入身份证号" />
-        </el-form-item>
-        <el-form-item label="QQ">
-          <el-input v-model="temp.qq" placeholder="请输入QQ" />
-        </el-form-item>
-        <el-form-item label="微信">
-          <el-input v-model="temp.weChat" placeholder="请输入微信" />
+        <el-form-item label="密码" prop="userPassword">
+          <el-input v-model="createUserModel.userPassword" placeholder="请输入密码" />
         </el-form-item>
         <el-form-item label="描述">
           <el-input
-            v-model="temp.descripts"
+            v-model="createUserModel.descripts"
             :autosize="{ minRows: 2, maxRows: 4 }"
             type="textarea"
             maxlength="200"
@@ -259,12 +207,100 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false"> 关闭 </el-button>
-        <el-button
-          type="primary"
-          @click="dialogStatus === 'create' ? createData() : updateData()"
-        >
-          确认
-        </el-button>
+        <el-button type="primary" @click="createData()"> 确认 </el-button>
+      </div>
+    </el-dialog>
+
+    <el-dialog
+      title="创建用户"
+      :visible.sync="dialogCreateUserFormVisible"
+      style="margin-top: -100px"
+    >
+      <el-form
+        ref="createUserForm"
+        :rules="createUserRules"
+        :model="createUserModel"
+        label-position="right"
+        label-width="70px"
+        style="width: 85%; margin-left: 50px"
+      >
+        <el-form-item label="用户名" prop="userLoginName" class="filter-item">
+          <el-input
+            v-model="createUserModel.userLoginName"
+            placeholder="请输入用户名"
+            maxlength="50"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="昵称" prop="userShowName">
+          <el-input
+            v-model="createUserModel.userShowName"
+            placeholder="请输入昵称"
+            maxlength="50"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="密码" prop="userPassword">
+          <el-input v-model="createUserModel.userPassword" show-password placeholder="请输入密码" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input
+            v-model="createUserModel.descripts"
+            :autosize="{ minRows: 2, maxRows: 4 }"
+            type="textarea"
+            maxlength="200"
+            show-word-limit
+            placeholder="描述"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogCreateUserFormVisible = false"> 关闭 </el-button>
+        <el-button type="primary" @click="createData()"> 确认 </el-button>
+      </div> </el-dialog><el-dialog
+      title="编辑用户"
+      :visible.sync="dialogUpdateUserFormVisible"
+      style="margin-top: -100px"
+    >
+      <el-form
+        ref="updateUserForm"
+        :rules="updateUserRules"
+        :model="updateUserModel"
+        label-position="right"
+        label-width="70px"
+        style="width: 85%; margin-left: 50px"
+      >
+        <el-form-item label="用户名" prop="userLoginName" class="filter-item">
+          <el-input
+            v-model="updateUserModel.userLoginName"
+            disabled="true"
+            placeholder="请输入用户名"
+            maxlength="50"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="昵称" prop="userShowName">
+          <el-input
+            v-model="updateUserModel.userShowName"
+            placeholder="请输入昵称"
+            maxlength="50"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input
+            v-model="updateUserModel.descripts"
+            :autosize="{ minRows: 2, maxRows: 4 }"
+            type="textarea"
+            maxlength="200"
+            show-word-limit
+            placeholder="描述"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogUpdateUserFormVisible = false"> 关闭 </el-button>
+        <el-button type="primary" @click="updateData()"> 确认 </el-button>
       </div>
     </el-dialog>
 
@@ -304,32 +340,14 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogResetPasswordVisible = false">
-          关闭
-        </el-button>
-        <el-button type="primary" @click="updateUserNewPassword()">
-          确认
-        </el-button>
+        <el-button @click="dialogResetPasswordVisible = false"> 关闭 </el-button>
+        <el-button type="primary" @click="updateUserNewPassword()"> 确认 </el-button>
       </div>
     </el-dialog>
 
-    <el-dialog
-      title="分配角色"
-      :visible.sync="dialogUserRoleVisible"
-      style="margin-top: -100px"
-    >
-      <el-table
-        ref="userRolesDataList"
-        v-loading="listLoading"
-        :data="userRolesData"
-        border
-        style="width: 100%"
-      >
-        <el-table-column
-          type="selection"
-          width="55"
-          align="center"
-        />
+    <el-dialog title="分配角色" :visible.sync="dialogUserRoleVisible" style="margin-top: -100px">
+      <el-table ref="userRolesDataList" :data="userRolesData" border style="width: 100%">
+        <el-table-column type="selection" width="55" align="center" />
         <!-- <el-table-column
           label="序号"
           prop="id"
@@ -341,12 +359,12 @@
             <span>{{ row.id }}</span>
           </template>
         </el-table-column> -->
-        <el-table-column label="角色名" min-width="120px">
+        <el-table-column label="角色名">
           <template slot-scope="{ row }">
             <span>{{ row.roleName }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="角色描述" min-width="120px">
+        <el-table-column label="角色描述">
           <template slot-scope="{ row }">
             <span>{{ row.roleDesc }}</span>
           </template>
@@ -364,6 +382,7 @@
 import {
   getUsers,
   saveUser,
+  updateUser,
   deleteUser,
   updateUserIsUse,
   resetUserPassword
@@ -395,21 +414,41 @@ export default {
       },
       // 查询用户的角色列表
       listUserRolesQuery: {
-        id: 0
+        userId: 0
       },
-      // 保存用户的实体类
-      temp: {
-        id: 0,
+      // 创建用户框是否显示
+      dialogCreateUserFormVisible: false,
+      // 创建用户的实体类
+      createUserModel: {
         userLoginName: '',
         userShowName: '',
-        headPortrait: '',
-        phone: '',
-        eMail: '',
-        birthDate: '',
-        idCard: '',
-        qq: '',
-        weChat: '',
+        userPassword: '',
         descripts: ''
+      },
+      // 创建用户时的验证规则
+      createUserRules: {
+        // 用户登录名
+        userLoginName: [{ required: true, message: '用户名不可为空.', trigger: 'blur' }],
+        // 用户昵称
+        userShowName: [{ required: true, message: '昵称不可为空.', trigger: 'blur' }],
+        // 用户密码
+        userPassword: [{ required: true, message: '密码不可为空.', trigger: 'blur' }]
+      },
+      // 编辑用户框是否显示
+      dialogUpdateUserFormVisible: false,
+      // 编辑用户的实体类
+      updateUserModel: {
+        userLoginName: '',
+        userShowName: '',
+        userPassword: '',
+        descripts: ''
+      },
+      // 编辑用户时的验证规则
+      updateUserRules: {
+        // 用户登录名
+        userLoginName: [{ required: true, message: '用户名不可为空.', trigger: 'blur' }],
+        // 用户昵称
+        userShowName: [{ required: true, message: '昵称不可为空.', trigger: 'blur' }]
       },
       // 重置密码实体类
       resetPasswordTemp: {
@@ -418,8 +457,6 @@ export default {
         newPassword: '',
         reNewPassword: ''
       },
-      // 编辑框是否显示
-      dialogFormVisible: false,
       // 重置密码框是否显示
       dialogResetPasswordVisible: false,
       dialogStatus: '',
@@ -428,22 +465,9 @@ export default {
         update: '编辑用户',
         create: '创建用户'
       },
-      // 编辑用户时的验证规则
-      rules: {
-        // 用户登录名
-        userLoginName: [
-          { required: true, message: '用户名不可为空.', trigger: 'blur' }
-        ],
-        // 用户昵称
-        userShowName: [
-          { required: true, message: '昵称不可为空.', trigger: 'blur' }
-        ]
-      },
       // 重置密码时的验证规则
       rulesReset: {
-        userLoginName: [
-          { required: true, message: '用户名不可为空.', trigger: 'blur' }
-        ],
+        userLoginName: [{ required: true, message: '用户名不可为空.', trigger: 'blur' }],
         newPassword: [
           { required: true, message: '新密码不可为空.', trigger: 'blur' },
           { min: 6, message: '不可小于6位字符.', trigger: 'blur' }
@@ -453,8 +477,6 @@ export default {
           { min: 6, message: '不可小于6位字符.', trigger: 'blur' }
         ]
       },
-      // 加载列表的动画
-      downloadLoading: false,
       // 用户角色编辑框是否显示
       dialogUserRoleVisible: false,
       // 保存用户角色
@@ -477,7 +499,7 @@ export default {
   },
   methods: {
     getList() {
-      getUsers(this.listQuery).then((response) => {
+      getUsers(this.listQuery).then(response => {
         this.list = response.data.items
         this.total = response.data.totalCount
       })
@@ -491,30 +513,24 @@ export default {
         id: 0,
         userLoginName: '',
         userShowName: '',
-        headPortrait: '',
-        phone: '',
-        eMail: '',
-        birthDate: new Date(),
-        idCard: '',
-        qq: '',
-        weChat: '',
         descripts: ''
       }
     },
+    // 新增用户弹出框
     handleCreate() {
       this.resetTemp()
-      this.dialogStatus = 'create'
-      this.dialogFormVisible = true
+      this.dialogCreateUserFormVisible = true
       this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
+        this.$refs['createUserForm'].clearValidate()
       })
     },
+    // 创建用户
     createData() {
-      this.$refs['dataForm'].validate((valid) => {
+      this.$refs['createUserForm'].validate(valid => {
         if (valid) {
-          saveUser(this.temp).then(() => {
+          saveUser(this.createUserModel).then(() => {
             this.getList()
-            this.dialogFormVisible = false
+            this.dialogCreateUserFormVisible = false
             this.$notify({
               message: '新增成功',
               type: 'success',
@@ -524,13 +540,28 @@ export default {
         }
       })
     },
+    // 编辑用户
     handleUpdate(row) {
-      this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
-      this.dialogStatus = 'update'
-      this.dialogFormVisible = true
+      this.updateUserModel = Object.assign({}, row) // copy obj
+      this.dialogUpdateUserFormVisible = true
       this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
+        this.$refs['updateUserForm'].clearValidate()
+      })
+    },
+    // 编辑用户
+    updateData() {
+      this.$refs['updateUserForm'].validate(valid => {
+        if (valid) {
+          updateUser(this.updateUserModel).then(() => {
+            this.getList()
+            this.dialogUpdateUserFormVisible = false
+            this.$notify({
+              message: '编辑成功',
+              type: 'success',
+              duration: 2000
+            })
+          })
+        }
       })
     },
     handleResetPassword(row) {
@@ -539,22 +570,6 @@ export default {
       this.dialogResetPasswordVisible = true
       this.$nextTick(() => {
         this.$refs['dataFormResetPassword'].clearValidate()
-      })
-    },
-    updateData() {
-      this.$refs['dataForm'].validate((valid) => {
-        if (valid) {
-          const tempData = Object.assign({}, this.temp)
-          saveUser(tempData).then(() => {
-            this.getList()
-            this.dialogFormVisible = false
-            this.$notify({
-              message: '更改成功',
-              type: 'success',
-              duration: 2000
-            })
-          })
-        }
       })
     },
     updateUserUse($event, row) {
@@ -591,23 +606,20 @@ export default {
         return
       }
       const arr = []
-      console.log(row.id)
       arr.push(row.id)
-      this.$confirm(`你确定删除 ${row.userLoginName} 吗？`, '提示', {}).then(
-        () => {
-          deleteUser({ ids: arr }).then(() => {
-            this.getList()
-            this.dialogFormVisible = false
-            this.$message({
-              message: '删除成功.',
-              type: 'success'
-            })
+      this.$confirm(`你确定删除 ${row.userLoginName} 吗？`, '提示', {}).then(() => {
+        deleteUser({ ids: arr }).then(() => {
+          this.getList()
+          this.dialogFormVisible = false
+          this.$message({
+            message: '删除成功.',
+            type: 'success'
           })
-        }
-      )
+        })
+      })
     },
     updateUserNewPassword() {
-      this.$refs['dataFormResetPassword'].validate((valid) => {
+      this.$refs['dataFormResetPassword'].validate(valid => {
         if (valid) {
           resetUserPassword(this.resetPasswordTemp).then(() => {
             this.dialogResetPasswordVisible = false
@@ -620,24 +632,22 @@ export default {
       })
     },
     getUserRolesList() {
-      getUserRoles(this.listUserRolesQuery).then((response) => {
+      getUserRoles(this.listUserRolesQuery).then(response => {
         this.$nextTick(() => {
           this.userRolesData = response.data
-          this.userRolesData.forEach((o) =>
-            this.$refs.userRolesDataList.toggleRowSelection(o, true)
-          )
+          this.userRolesData.forEach(o => this.$refs.userRolesDataList.toggleRowSelection(o, true))
         })
       })
     },
     assignRoles(row) {
       this.dialogUserRoleVisible = true
-      this.listUserRolesQuery.id = row.id
+      this.listUserRolesQuery.userId = row.id
       this.userRoles.userId = row.id
       this.getUserRolesList()
     },
     saveUserRoles() {
       const userRole = []
-      this.$refs.userRolesDataList.selection.forEach((a) => {
+      this.$refs.userRolesDataList.selection.forEach(a => {
         userRole.push({
           userId: this.userRoles.userId,
           roleId: a.id
@@ -705,8 +715,9 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-.filter-container,.el-row {
-    padding-bottom: 20px;
+.filter-container,
+.el-row {
+  padding-bottom: 20px;
 }
 
 .avatar-uploader .el-upload .avatar-uploader-icon {

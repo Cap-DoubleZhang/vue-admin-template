@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getRoles(query) {
   return request({
-    url: 'role/paged-list',
+    url: 'role/pagelist',
     method: 'get',
     params: query
   })
@@ -10,7 +10,7 @@ export function getRoles(query) {
 
 export function saveRole(data) {
   return request({
-    url: 'role',
+    url: 'role/save',
     method: 'post',
     data
   })
